@@ -1,0 +1,6 @@
+{
+  "name": "DiagramHub - Sistema de Gestão e Busca Relacional de Diagramas",
+  "description": "Sistema industrial de gestão, versionamento e busca relacional de diagramas elétricos e de automação com localização instantânea de tags, cabos e réguas de bornes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
