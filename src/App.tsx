@@ -26,6 +26,7 @@ import { SearchSpotlightModal } from './components/SearchSpotlightModal';
 import { UploadRevisionModal } from './components/UploadRevisionModal';
 import { RevisionHistoryDrawer } from './components/RevisionHistoryDrawer';
 import { CableScheduleTable } from './components/CableScheduleTable';
+import { RemotaSearchTab } from './components/RemotaSearchTab';
 import { FieldChecklistModal } from './components/FieldChecklistModal';
 import { MobileFieldView } from './components/MobileFieldView';
 
@@ -43,7 +44,7 @@ export default function App() {
   const [currentPageNumber, setCurrentPageNumber] = useState<number>(19); // Começa na folha chave do motor Z3M03M1
   const [selectedTag, setSelectedTag] = useState<TagItem | null>(null);
   const [highlightedTagCode, setHighlightedTagCode] = useState<string>('Z3M03M1');
-  const [currentTab, setCurrentTab] = useState<'viewer' | 'cables' | 'revisions' | 'checklist'>('viewer');
+  const [currentTab, setCurrentTab] = useState<'viewer' | 'cables' | 'remotas' | 'revisions' | 'checklist'>('viewer');
   const [isMobileMode, setIsMobileMode] = useState<boolean>(false);
 
   // Modais e painéis
@@ -295,6 +296,12 @@ export default function App() {
             {currentTab === 'cables' && (
               <CableScheduleTable
                 cables={cables}
+                onNavigateToPage={handleNavigateToPageAndTag}
+              />
+            )}
+
+            {currentTab === 'remotas' && (
+              <RemotaSearchTab
                 onNavigateToPage={handleNavigateToPageAndTag}
               />
             )}

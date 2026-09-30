@@ -2,8 +2,8 @@ import React from 'react';
 import { Search, UploadCloud, Smartphone, Monitor, Shield, FileText } from 'lucide-react';
 
 interface TopNavbarProps {
-  currentTab: 'viewer' | 'cables' | 'revisions' | 'checklist';
-  onSelectTab: (tab: 'viewer' | 'cables' | 'revisions' | 'checklist') => void;
+  currentTab: 'viewer' | 'cables' | 'remotas' | 'revisions' | 'checklist';
+  onSelectTab: (tab: 'viewer' | 'cables' | 'remotas' | 'revisions' | 'checklist') => void;
   onOpenSearch: () => void;
   onOpenUpload: () => void;
   isMobileMode: boolean;
@@ -69,6 +69,17 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           }`}
         >
           De-Para de Bornes & Cabos
+        </button>
+
+        <button
+          onClick={() => onSelectTab('remotas')}
+          className={`px-3 py-1.5 rounded-md text-xs lg:text-sm transition-colors whitespace-nowrap ${
+            currentTab === 'remotas'
+              ? 'bg-slate-800 text-cyan-400 shadow-sm'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+          }`}
+        >
+          Pesquisa de Remotas
         </button>
 
         <button
