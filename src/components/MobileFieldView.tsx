@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { DiagramPage, TagItem } from '../types/diagram';
 import { searchTagsInPages, findTagOccurrencesAcrossDocument } from '../utils/tagParser';
+import { RealPdfViewer } from './RealPdfViewer';
 
 interface MobileFieldViewProps {
   currentPage: DiagramPage;
@@ -113,76 +114,15 @@ export const MobileFieldView: React.FC<MobileFieldViewProps> = ({
             height: '320px'
           }}
         >
-          {/* Simple Vector View for Mobile */}
-          <svg viewBox="0 0 460 320" className="w-full h-full select-none">
-            {/* Border and grid */}
-            <rect x="5" y="5" width="450" height="310" fill="none" stroke="#334155" strokeWidth="1.5" />
-
-            {/* Title header */}
-            <rect x="10" y="10" width="440" height="24" fill="#f1f5f9" stroke="#cbd5e1" />
-            <text x="20" y="26" fill="#0f172a" fontSize="10" fontWeight="bold" fontFamily="monospace">
-              PÁG {currentPage.pageNumber}: {currentPage.title.slice(0, 32)}
-            </text>
-
-            {/* Schematic elements representation */}
-            <line x1="20" y1="70" x2="440" y2="70" stroke="#0284c7" strokeWidth="2.5" />
-            <text x="30" y="62" fill="#0f172a" fontSize="9" fontWeight="bold" fontFamily="monospace">
-              ALIMENTAÇÃO & INTERLIGAÇÃO
-            </text>
-
-            {/* Component boxes */}
-            <rect x="30" y="95" width="110" height="120" fill="#f8fafc" stroke="#334155" strokeWidth="1" />
-            <text x="40" y="115" fill="#0f172a" fontSize="9" fontWeight="bold">COMANDO</text>
-            <circle cx="85" cy="165" r="24" fill="none" stroke="#0284c7" strokeWidth="1.5" />
-            <text x="85" y="169" fill="#0f172a" fontSize="12" fontWeight="bold" textAnchor="middle">M</text>
-
-            {/* Wire to terminal */}
-            <path d="M 140 155 L 230 155" stroke="#f59e0b" strokeWidth="2" />
-            <rect x="155" y="145" width="60" height="14" fill="#ffffff" stroke="#f59e0b" />
-            <text x="185" y="155" fill="#b45309" fontSize="7" fontWeight="bold" textAnchor="middle" fontFamily="monospace">
-              1X7C#1.0mm²
-            </text>
-
-            {/* Terminal Block */}
-            <rect x="230" y="95" width="200" height="120" fill="#f8fafc" stroke="#334155" strokeWidth="1" />
-            <text x="240" y="115" fill="#0f172a" fontSize="9" fontWeight="bold">RÉGUA DE BORNES</text>
-            {[1, 2, 3, 4].map((b) => (
-              <g key={b} transform={`translate(${235 + b * 36}, 160)`}>
-                <circle cx="0" cy="0" r="8" fill="#e2e8f0" stroke="#334155" />
-                <text x="0" y="3" fill="#0f172a" fontSize="8" textAnchor="middle" fontFamily="monospace">{b}</text>
-              </g>
-            ))}
-
-            {/* Tag pins overlay on mobile */}
-            {currentPage.tags.map((tag) => (
-              <g
-                key={tag.id}
-                onClick={() => {
-                  onSelectTag(tag);
-                  setShowTagDrawer(true);
-                }}
-                className="cursor-pointer"
-              >
-                <circle cx="85" cy="205" r="6" fill="#06b6d4" className="animate-pulse" />
-                <rect x="40" y="215" width="90" height="18" rx="3" fill="#0f172a" stroke="#06b6d4" />
-                <text x="85" y="227" fill="#fff" fontSize="8.5" fontWeight="bold" textAnchor="middle" fontFamily="monospace">
-                  {tag.code}
-                </text>
-              </g>
-            ))}
-
-            {/* Mini carimbo */}
-            <rect x="260" y="255" width="190" height="55" fill="#ffffff" stroke="#cbd5e1" />
-            <text x="270" y="272" fill="#0284c7" fontSize="10" fontWeight="bold" fontFamily="monospace">
-              NB.I.Z3001.505
-            </text>
-            <text x="270" y="286" fill="#64748b" fontSize="8">
-              VOTORANTIM CIMENTOS
-            </text>
-            <text x="270" y="300" fill="#e11d48" fontSize="10" fontWeight="bold">
-              REV. {currentPage.revision} · PÁG {currentPage.sheetCode}
-            </text>
-          </svg>
+          {/* Real PDF Diagram Viewer for Mobile */}
+          <div className="w-full h-full flex items-center justify-center pointer-events-none p-1 overflow-hidden">
+            <RealPdfViewer
+              pdfUrl="/NB.I.Z3001.505-02.pdf"
+              pageNumber={currentPage.pageNumber}
+              viewTheme="light-classic"
+              scale={1.5}
+            />
+          </div>
         </div>
 
         {/* Floating Zoom Controls for Field */}

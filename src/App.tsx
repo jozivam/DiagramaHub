@@ -62,14 +62,14 @@ export default function App() {
   const [cables, setCables] = useState<CableScheduleItem[]>(initialCableSchedule);
   const [checklistItems, setChecklistItems] = useState<FieldChecklistItem[]>(initialFieldChecklist);
 
-  // Auto-detecção de largura de tela para Mobile
+  // Auto-detecção e escuta em tempo real da largura de tela para Mobile
   useEffect(() => {
     const checkWidth = () => {
-      if (window.innerWidth < 768) {
-        setIsMobileMode(true);
-      }
+      setIsMobileMode(window.innerWidth < 768);
     };
     checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
   }, []);
 
   // Atalhos de teclado globais

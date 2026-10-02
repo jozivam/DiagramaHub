@@ -43,6 +43,7 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
   const [viewTheme, setViewTheme] = useState<'light-classic' | 'blueprint-cad' | 'blueprint-dark'>('light-classic');
   const [viewerMode, setViewerMode] = useState<'pdf-canvas' | 'pdf-native'>('pdf-canvas');
   const [showTagPins, setShowTagPins] = useState<boolean>(true);
+  const [showOverlayCarimbo, setShowOverlayCarimbo] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
   // Filtro interativo no diagrama existente
@@ -260,6 +261,20 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
             </button>
           </div>
 
+          {/* Ocultar/Exibir Carimbo Sobreposto */}
+          <div className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700">
+            <button
+              onClick={() => setShowOverlayCarimbo(!showOverlayCarimbo)}
+              className={`px-2 py-1 rounded text-[11px] font-medium transition-colors flex items-center gap-1 ${
+                showOverlayCarimbo ? 'bg-amber-900/80 text-amber-200 border border-amber-500/50' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Exibir ou ocultar a legenda/carimbo em overlay sobre o diagrama"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{showOverlayCarimbo ? 'Carimbo: Visível' : 'Carimbo: Oculto'}</span>
+            </button>
+          </div>
+
           {/* Temas CAD */}
           <div className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700">
             <button
@@ -450,122 +465,122 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
               </g>
             )}
 
+            {/* CARIMBO OFICIAL TÉCNICO EM OVERLAY (Opcional se o usuário quiser ativar) */}
+            {showOverlayCarimbo && (
+              <g id="carimbo-tecnico">
+                <rect x="35" y="730" width="1210" height="84" fill={isDark ? '#0f172a' : isCad ? '#00223a' : '#ffffff'} stroke={borderGridColor} strokeWidth="1.5" />
+                <line x1="200" y1="730" x2="200" y2="814" stroke={borderGridColor} strokeWidth="1" />
+                <line x1="440" y1="730" x2="440" y2="814" stroke={borderGridColor} strokeWidth="1" />
+                <line x1="640" y1="730" x2="640" y2="814" stroke={borderGridColor} strokeWidth="1" />
+                <line x1="940" y1="730" x2="940" y2="814" stroke={borderGridColor} strokeWidth="1" />
+                <line x1="1140" y1="730" x2="1140" y2="814" stroke={borderGridColor} strokeWidth="1" />
+                <line x1="1200" y1="730" x2="1200" y2="814" stroke={borderGridColor} strokeWidth="1" />
+                <line x1="640" y1="765" x2="1245" y2="765" stroke={borderGridColor} strokeWidth="1" />
 
-
-            {/* CARIMBO OFICIAL TÉCNICO (VOTORANTIM CIMENTOS / ATMC / NOBRES MT) */}
-            <g id="carimbo-tecnico">
-              <rect x="35" y="730" width="1210" height="84" fill={isDark ? '#0f172a' : isCad ? '#00223a' : '#ffffff'} stroke={borderGridColor} strokeWidth="1.5" />
-              <line x1="200" y1="730" x2="200" y2="814" stroke={borderGridColor} strokeWidth="1" />
-              <line x1="440" y1="730" x2="440" y2="814" stroke={borderGridColor} strokeWidth="1" />
-              <line x1="640" y1="730" x2="640" y2="814" stroke={borderGridColor} strokeWidth="1" />
-              <line x1="940" y1="730" x2="940" y2="814" stroke={borderGridColor} strokeWidth="1" />
-              <line x1="1140" y1="730" x2="1140" y2="814" stroke={borderGridColor} strokeWidth="1" />
-              <line x1="1200" y1="730" x2="1200" y2="814" stroke={borderGridColor} strokeWidth="1" />
-              <line x1="640" y1="765" x2="1245" y2="765" stroke={borderGridColor} strokeWidth="1" />
-
-              <g transform="translate(45, 742)">
-                <text x="0" y="10" fill="#f97316" fontSize="18" fontWeight="900" fontFamily="sans-serif">
-                  ATMC
-                </text>
-                <text x="0" y="24" fill={textMuted} fontSize="9" fontFamily="sans-serif">
-                  Consultoria e Engenharia
-                </text>
-                <text x="0" y="58" fill={textMuted} fontSize="8" fontFamily="monospace">
-                  FORNECEDOR DO PROJETO
-                </text>
-              </g>
-
-              <g transform="translate(210, 742)">
-                <text x="0" y="9" fill={textMuted} fontSize="8" fontFamily="monospace">
-                  CLIENTE:
-                </text>
-                <path d="M 0 16 L 12 36 L 24 16 Z" fill="#2563eb" />
-                <path d="M 12 16 L 22 36 L 32 16 Z" fill="#16a34a" />
-                <text x="36" y="26" fill={textPrimary} fontSize="14" fontWeight="800" fontFamily="sans-serif">
-                  VOTORANTIM
-                </text>
-                <text x="36" y="40" fill={textPrimary} fontSize="12" fontWeight="600" fontFamily="sans-serif">
-                  cimentos
-                </text>
-              </g>
-
-              <g transform="translate(450, 742)">
-                <text x="0" y="9" fill={textMuted} fontSize="8" fontFamily="monospace">
-                  PROJETO:
-                </text>
-                <text x="0" y="28" fill={textPrimary} fontSize="12" fontWeight="bold">
-                  MOAGEM Z3
-                </text>
-                <text x="0" y="44" fill={textMuted} fontSize="11">
-                  NOBRES - MT
-                </text>
-              </g>
-
-              <g transform="translate(650, 740)">
-                <text x="0" y="9" fill={textMuted} fontSize="8" fontFamily="monospace">
-                  TÍTULO:
-                </text>
-                <text x="0" y="20" fill={textPrimary} fontSize="10" fontWeight="bold" fontFamily="monospace">
-                  {page.title.slice(0, 48)}
-                </text>
-                {page.title.length > 48 && (
-                  <text x="0" y="32" fill={textPrimary} fontSize="10" fontWeight="bold" fontFamily="monospace">
-                    {page.title.slice(48)}
+                <g transform="translate(45, 742)">
+                  <text x="0" y="10" fill="#f97316" fontSize="18" fontWeight="900" fontFamily="sans-serif">
+                    ATMC
                   </text>
-                )}
-                <text x="0" y="55" fill={textMuted} fontSize="9" fontFamily="monospace">
-                  DIAGRAMA DE INTERLIGAÇÃO
-                </text>
-              </g>
+                  <text x="0" y="24" fill={textMuted} fontSize="9" fontFamily="sans-serif">
+                    Consultoria e Engenharia
+                  </text>
+                  <text x="0" y="58" fill={textMuted} fontSize="8" fontFamily="monospace">
+                    FORNECEDOR DO PROJETO
+                  </text>
+                </g>
 
-              <g transform="translate(950, 742)">
-                <text x="0" y="8" fill={textMuted} fontSize="7" fontFamily="monospace">
-                  Nº DO DESENHO DO FORNECEDOR:
-                </text>
-                <text x="0" y="20" fill={textPrimary} fontSize="11" fontWeight="bold" fontFamily="monospace">
-                  {page.supplierDrawing}
-                </text>
-                <text x="0" y="44" fill={textMuted} fontSize="8" fontFamily="monospace">
-                  PROJETISTA: T.S.S. | APROV: G.F.R.
-                </text>
-                <text x="0" y="58" fill={textMuted} fontSize="8" fontFamily="monospace">
-                  ESCALA: S/E | DIEDRO: 1º
-                </text>
-              </g>
+                <g transform="translate(210, 742)">
+                  <text x="0" y="9" fill={textMuted} fontSize="8" fontFamily="monospace">
+                    CLIENTE:
+                  </text>
+                  <path d="M 0 16 L 12 36 L 24 16 Z" fill="#2563eb" />
+                  <path d="M 12 16 L 22 36 L 32 16 Z" fill="#16a34a" />
+                  <text x="36" y="26" fill={textPrimary} fontSize="14" fontWeight="800" fontFamily="sans-serif">
+                    VOTORANTIM
+                  </text>
+                  <text x="36" y="40" fill={textPrimary} fontSize="12" fontWeight="600" fontFamily="sans-serif">
+                    cimentos
+                  </text>
+                </g>
 
-              <g transform="translate(950, 775)">
-                <text x="0" y="10" fill={textMuted} fontSize="8" fontFamily="monospace">
-                  PROJECT ID:
-                </text>
-                <text x="0" y="26" fill="#0284c7" fontSize="13" fontWeight="900" fontFamily="monospace">
-                  {page.drawingNumber}
-                </text>
-              </g>
+                <g transform="translate(450, 742)">
+                  <text x="0" y="9" fill={textMuted} fontSize="8" fontFamily="monospace">
+                    PROJETO:
+                  </text>
+                  <text x="0" y="28" fill={textPrimary} fontSize="12" fontWeight="bold">
+                    MOAGEM Z3
+                  </text>
+                  <text x="0" y="44" fill={textMuted} fontSize="11">
+                    NOBRES - MT
+                  </text>
+                </g>
 
-              <g transform="translate(1145, 740)">
-                <text x="0" y="10" fill={textMuted} fontSize="8" fontFamily="monospace">
-                  DATA:
-                </text>
-                <text x="0" y="22" fill={textPrimary} fontSize="9" fontFamily="monospace">
-                  {page.date}
-                </text>
-                <text x="0" y="44" fill={textMuted} fontSize="8" fontFamily="monospace">
-                  PÁG.
-                </text>
-                <text x="14" y="66" fill={textPrimary} fontSize="16" fontWeight="bold" fontFamily="monospace" textAnchor="middle">
-                  {page.sheetCode}
-                </text>
-              </g>
+                <g transform="translate(650, 740)">
+                  <text x="0" y="9" fill={textMuted} fontSize="8" fontFamily="monospace">
+                    TÍTULO:
+                  </text>
+                  <text x="0" y="20" fill={textPrimary} fontSize="10" fontWeight="bold" fontFamily="monospace">
+                    {page.title.slice(0, 48)}
+                  </text>
+                  {page.title.length > 48 && (
+                    <text x="0" y="32" fill={textPrimary} fontSize="10" fontWeight="bold" fontFamily="monospace">
+                      {page.title.slice(48)}
+                    </text>
+                  )}
+                  <text x="0" y="55" fill={textMuted} fontSize="9" fontFamily="monospace">
+                    DIAGRAMA DE INTERLIGAÇÃO
+                  </text>
+                </g>
 
-              <g transform="translate(1205, 740)">
-                <text x="18" y="14" fill={textMuted} fontSize="8" fontFamily="monospace" textAnchor="middle">
-                  REV.
-                </text>
-                <text x="18" y="55" fill="#e11d48" fontSize="26" fontWeight="900" fontFamily="monospace" textAnchor="middle">
-                  {page.revision}
-                </text>
+                <g transform="translate(950, 742)">
+                  <text x="0" y="8" fill={textMuted} fontSize="7" fontFamily="monospace">
+                    Nº DO DESENHO DO FORNECEDOR:
+                  </text>
+                  <text x="0" y="20" fill={textPrimary} fontSize="11" fontWeight="bold" fontFamily="monospace">
+                    {page.supplierDrawing}
+                  </text>
+                  <text x="0" y="44" fill={textMuted} fontSize="8" fontFamily="monospace">
+                    PROJETISTA: T.S.S. | APROV: G.F.R.
+                  </text>
+                  <text x="0" y="58" fill={textMuted} fontSize="8" fontFamily="monospace">
+                    ESCALA: S/E | DIEDRO: 1º
+                  </text>
+                </g>
+
+                <g transform="translate(950, 775)">
+                  <text x="0" y="10" fill={textMuted} fontSize="8" fontFamily="monospace">
+                    PROJECT ID:
+                  </text>
+                  <text x="0" y="26" fill="#0284c7" fontSize="13" fontWeight="900" fontFamily="monospace">
+                    {page.drawingNumber}
+                  </text>
+                </g>
+
+                <g transform="translate(1145, 740)">
+                  <text x="0" y="10" fill={textMuted} fontSize="8" fontFamily="monospace">
+                    DATA:
+                  </text>
+                  <text x="0" y="22" fill={textPrimary} fontSize="9" fontFamily="monospace">
+                    {page.date}
+                  </text>
+                  <text x="0" y="44" fill={textMuted} fontSize="8" fontFamily="monospace">
+                    PÁG.
+                  </text>
+                  <text x="14" y="66" fill={textPrimary} fontSize="16" fontWeight="bold" fontFamily="monospace" textAnchor="middle">
+                    {page.sheetCode}
+                  </text>
+                </g>
+
+                <g transform="translate(1205, 740)">
+                  <text x="18" y="14" fill={textMuted} fontSize="8" fontFamily="monospace" textAnchor="middle">
+                    REV.
+                  </text>
+                  <text x="18" y="55" fill="#e11d48" fontSize="26" fontWeight="900" fontFamily="monospace" textAnchor="middle">
+                    {page.revision}
+                  </text>
+                </g>
               </g>
-            </g>
+            )}
 
             {/* 4. ELEMENTO APONTADOR DISCRETO QUANDO UMA TAG FOR BUSCADA (Sem quadrado pontilhado nem badge) */}
             {showTagPins &&
