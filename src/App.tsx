@@ -149,7 +149,7 @@ export default function App() {
     setRecentSearches((prev) => [clean, ...prev.filter((q) => q !== clean)].slice(0, 10));
   };
 
-  // Aplicação de nova revisão (RF-01)
+  // Aplicação de nova revisão (RF-01) - Recarrega e reindexa 100% das 337 páginas e tags
   const handleApplyNewRevision = (newRev: DocumentRevision, newDocumentNumber?: string) => {
     setDocument((prev) => {
       const updatedRevisions = prev.revisions.map((r) => ({
@@ -158,7 +158,8 @@ export default function App() {
       }));
       updatedRevisions.unshift(newRev);
 
-      const updatedPages = prev.pages.map((p) => ({
+      const freshPages = generateNobresPages(newRev.revision);
+      const updatedPages = freshPages.map((p) => ({
         ...p,
         revision: newRev.revision,
         drawingNumber: newDocumentNumber || p.drawingNumber
@@ -180,7 +181,8 @@ export default function App() {
         ...r,
         isActive: r.revision === revNumber
       }));
-      const updatedPages = prev.pages.map((p) => ({
+      const freshPages = generateNobresPages(revNumber);
+      const updatedPages = freshPages.map((p) => ({
         ...p,
         revision: revNumber
       }));
@@ -189,6 +191,32 @@ export default function App() {
         ...prev,
         activeRevision: revNumber,
         revisions: updatedRevisions,
+        pages: updatedPages
+      };
+    });
+  };
+
+  const handleDeleteRevision = (revNumber: string) => {
+    setDocument((prev) => {
+      const remainingRevisions = prev.revisions.filter((r) => r.revision !== revNumber);
+      let nextActiveRev = prev.activeRevision;
+
+      // Se a revisão excluída for a ativa, torna a primeira restante ativa
+      if (prev.activeRevision === revNumber && remainingRevisions.length > 0) {
+        nextActiveRev = remainingRevisions[0].revision;
+        remainingRevisions[0].isActive = true;
+      }
+
+      const freshPages = generateNobresPages();
+      const updatedPages = freshPages.map((p) => ({
+        ...p,
+        revision: nextActiveRev
+      }));
+
+      return {
+        ...prev,
+        activeRevision: nextActiveRev,
+        revisions: remainingRevisions,
         pages: updatedPages
       };
     });
@@ -237,6 +265,8 @@ export default function App() {
         isMobileMode={isMobileMode}
         onToggleMobileMode={() => setIsMobileMode(!isMobileMode)}
         activeRevision={document.activeRevision}
+        revisions={document.revisions}
+        onSelectActiveRevision={handleSelectActiveRevision}
         documentNumber={document.documentNumber}
       />
 
@@ -273,6 +303,7 @@ export default function App() {
                   page={currentPage}
                   totalPages={document.pages.length}
                   allPages={document.pages}
+                  pdfUrl={document.revisions.find((r) => r.revision === document.activeRevision)?.pdfUrl || (document.activeRevision === '03' ? '/NB.I.Z3001.505-03.pdf' : '/NB.I.Z3001.505-02.pdf')}
                   highlightedTagCode={highlightedTagCode}
                   selectedTag={selectedTag}
                   onSelectTag={handleSelectTag}
@@ -311,6 +342,7 @@ export default function App() {
                 revisions={document.revisions}
                 activeRevision={document.activeRevision}
                 onSelectActiveRevision={handleSelectActiveRevision}
+                onDeleteRevision={handleDeleteRevision}
                 onOpenUpload={() => setIsUploadOpen(true)}
               />
             )}

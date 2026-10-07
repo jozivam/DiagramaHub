@@ -253,7 +253,7 @@ export const MobileFieldView: React.FC<MobileFieldViewProps> = ({
               autoFocus
               value={mobileQuery}
               onChange={(e) => setMobileQuery(e.target.value)}
-              placeholder="Digite a tag (ex: Z3M03M1, A1J02M1)..."
+              placeholder="Digite a tag KKS, ISA, Cabo ou Borne (ex: 416BM01MT10WHO2, Z3M03M1)..."
               className="flex-1 bg-transparent text-sm text-white focus:outline-none font-mono"
             />
             <button
@@ -267,9 +267,9 @@ export const MobileFieldView: React.FC<MobileFieldViewProps> = ({
           {/* Quick chips */}
           {!mobileQuery && (
             <div className="py-3 space-y-2">
-              <div className="text-[11px] text-slate-500 font-semibold">Tags mais frequentes:</div>
+              <div className="text-[11px] text-slate-500 font-semibold">Tags mais frequentes (ISA, KKS & Cabos):</div>
               <div className="flex flex-wrap gap-1.5">
-                {['Z3M03M1', 'A1J02M1', 'RM1-SL8:A2', 'Z3P62Q1', 'Z3S01Q1', 'Z3P71'].map((t) => (
+                {['Z3M03M1', '416BM01MT10WHO2', 'Z3M03M1F4', '416FA21EC10', 'RM1-SL8:A2', 'Z3P62Q1', 'Z3S01Q1'].map((t) => (
                   <button
                     key={t}
                     onClick={() => setMobileQuery(t)}

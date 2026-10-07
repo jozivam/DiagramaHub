@@ -108,29 +108,17 @@ export const DocumentIndexTree: React.FC<DocumentIndexTreeProps> = ({
 
   return (
     <aside className="w-80 h-full bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 text-slate-300">
-      {/* Search Filter Header */}
+      {/* Quick Navigation Header */}
       <div className="p-3 border-b border-slate-800">
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
-          <input
-            type="text"
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            placeholder="Filtrar páginas ou tags no índice..."
-            className="w-full bg-slate-950 border border-slate-700/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-          />
-        </div>
-
-        {/* Bookmarked quick filter if any */}
         {bookmarkedPages.length > 0 && (
-          <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
+          <div className="flex items-center justify-between text-[11px] text-slate-400">
             <span className="flex items-center gap-1 text-amber-400">
-              <Star className="w-3 h-3 fill-amber-400" />
+              <Star className="w-3.5 h-3.5 fill-amber-400" />
               {bookmarkedPages.length} páginas favoritadas
             </span>
             <button
               onClick={() => onSelectPage(bookmarkedPages[0])}
-              className="hover:text-white transition-colors"
+              className="hover:text-white transition-colors underline"
             >
               Ir para primeira
             </button>

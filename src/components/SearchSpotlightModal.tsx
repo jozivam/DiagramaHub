@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, X, CornerDownLeft, ArrowRight, Layers, Tag, Cable, Cpu, Hash, ExternalLink, Bookmark } from 'lucide-react';
 import { DiagramPage, TagItem, TagType } from '../types/diagram';
 import { searchTagsInPages, SearchResultItem } from '../utils/tagParser';
@@ -49,7 +49,14 @@ export const SearchSpotlightModal: React.FC<SearchSpotlightModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  const searchResults = searchTagsInPages(query, pages, filterType);
+  // Memoização ultra-rápida do cálculo de busca
+  const searchResults = useMemo(() => {
+    return searchTagsInPages(query, pages, filterType);
+  }, [query, pages, filterType]);
+
+  const displayedResults = useMemo(() => {
+    return searchResults.slice(0, 40);
+  }, [searchResults]);
 
   // Keyboard navigation up / down / enter
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -64,6 +71,17 @@ export const SearchSpotlightModal: React.FC<SearchSpotlightModalProps> = ({
       if (searchResults[selectedIndex]) {
         handleSelect(searchResults[selectedIndex]);
       } else if (query.trim()) {
+        const rawVal = query.trim().toUpperCase();
+        const numMatch = rawVal.match(/\d+/);
+        if (numMatch) {
+          const targetPageNum = parseInt(numMatch[0], 10);
+          if (targetPageNum >= 1 && targetPageNum <= 337) {
+            onAddRecentSearch(rawVal);
+            onSelectTagResult(targetPageNum, rawVal);
+            onClose();
+            return;
+          }
+        }
         onAddRecentSearch(query.trim());
       }
     }
@@ -114,31 +132,34 @@ export const SearchSpotlightModal: React.FC<SearchSpotlightModalProps> = ({
           </button>
         </div>
 
-        {/* Filter Bar (Zero-pill discipline: segmented interactive buttons) */}
+        {/* Filter Bar (Zero-pill discipline: segmented interactive buttons for tag format models) */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-900/50 text-xs text-slate-400 overflow-x-auto">
           <div className="flex items-center gap-1 shrink-0">
-            <span className="text-slate-500 mr-1.5 hidden sm:inline">Filtrar por:</span>
-            {(['ALL', 'EQUIPMENT', 'CABLE', 'PANEL', 'TERMINAL_BORNE'] as const).map((type) => (
+            <span className="text-slate-500 mr-1.5 hidden sm:inline">Modelo de Tag:</span>
+            {(['ALL', 'ISA', 'KKS', 'CABLE', 'BORNE', 'PANEL'] as const).map((type) => (
               <button
                 key={type}
-                onClick={() => { setFilterType(type); setSelectedIndex(0); }}
+                onClick={() => { setFilterType(type as any); setSelectedIndex(0); }}
                 className={`px-2.5 py-1 rounded-md font-medium text-xs transition-colors whitespace-nowrap ${
-                  filterType === type
+                  (filterType as string) === type
                     ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
                 }`}
               >
-                {type === 'ALL' && 'Todos'}
-                {type === 'EQUIPMENT' && 'Equipamentos'}
+                {type === 'ALL' && 'Todos os Formatos'}
+                {type === 'ISA' && 'ISA 5.1'}
+                {type === 'KKS' && 'KKS / Fabril'}
                 {type === 'CABLE' && 'Cabos'}
+                {type === 'BORNE' && 'Bornes / Réguas'}
                 {type === 'PANEL' && 'Painéis / CCM'}
-                {type === 'TERMINAL_BORNE' && 'Bornes / Réguas'}
               </button>
             ))}
           </div>
 
           <span className="text-[11px] text-slate-500 font-mono hidden md:inline shrink-0">
-            {searchResults.length} {searchResults.length === 1 ? 'resultado' : 'resultados'}
+            {searchResults.length > 40
+              ? `Exibindo 40 de ${searchResults.length} resultados`
+              : `${searchResults.length} ${searchResults.length === 1 ? 'resultado' : 'resultados'}`}
           </span>
         </div>
 
@@ -146,19 +167,20 @@ export const SearchSpotlightModal: React.FC<SearchSpotlightModalProps> = ({
         {!query && (
           <div className="p-4 border-b border-slate-800 bg-slate-900/30">
             <div className="text-xs font-semibold text-slate-400 mb-2 flex items-center justify-between">
-              <span>Tags em Destaque da Moagem Z3 (Clique para buscar rápido):</span>
-              <span className="text-[11px] text-slate-500">Revisão Ativa: Rev 02</span>
+              <span>Filtros Inteligentes por Formato (Clique para testar):</span>
+              <span className="text-[11px] text-cyan-400 font-semibold">Revisão Ativa: Rev 03</span>
             </div>
             <div className="flex flex-wrap gap-2 text-xs">
               {[
-                { tag: 'Z3M03M1', desc: 'Motor Principal Moinho 3700CV (Págs 6, 19, 20, 21)' },
-                { tag: 'A1J02M1', desc: 'Motor 55kW SU1 (Pág 4)' },
-                { tag: 'RM1-SL8:A2', desc: 'Borne Analógico Remota 01 (Pág 3)' },
-                { tag: 'Z3P62Q1', desc: 'Soft-Starter Ventilador 90kW (Págs 27, 28)' },
-                { tag: 'Z3S01Q1', desc: 'Inversor Separador Dinâmico 135kW (Pág 30, 31)' },
-                { tag: 'Z3P71', desc: 'Programador Filtro 52 Válvulas (Pág 51)' },
-                { tag: 'Z3P34_AT1', desc: 'Opacímetro Chaminé (Pág 337)' },
-                { tag: 'Z3-CCM02', desc: 'Alimentação CCM 02 (Pág 34, 192)' }
+                { tag: 'Z3P83', desc: 'Tag ISA/KKS: Programador Filtro de Processo Z3P83 (Folha 61 / Pág 64)' },
+                { tag: 'Z3M03M1', desc: 'Tag ISA: Motor Principal Moinho 3700CV (Págs 6, 19, 20)' },
+                { tag: '416BM01MT10WHO2', desc: 'Tag KKS: Dispositivo/Resistor Giro Lento Moinho (Pág 20)' },
+                { tag: 'Z3M03M1F4', desc: 'Tag Cabo: Alimentação Fase R 3x(1C#150mm²) (Pág 20)' },
+                { tag: '416FA21EC10', desc: 'Tag KKS: Soft-Starter Ventilador Moinho (Págs 29, 30)' },
+                { tag: 'RM1-SL8:A2', desc: 'Tag Borne: Interligação Analógica Remota 01 (Pág 3)' },
+                { tag: 'Z3-CCM02', desc: 'Tag Painel: Alimentação CCM 02 (Págs 36, 192)' },
+                { tag: 'Z3S01Q1', desc: 'Tag ISA: Inversor Separador Dinâmico 135kW (Págs 32, 33)' },
+                { tag: 'Z3P71', desc: 'Tag ISA: Programador Filtro de Processo (Pág 53)' }
               ].map((item) => (
                 <button
                   key={item.tag}
@@ -200,11 +222,11 @@ export const SearchSpotlightModal: React.FC<SearchSpotlightModalProps> = ({
               <Search className="w-8 h-8 text-slate-600 mx-auto mb-2 opacity-50" />
               <div className="font-medium text-slate-300">Nenhuma tag ou circuito encontrado para "{query}"</div>
               <p className="text-xs text-slate-500 mt-1">
-                Tente buscar por código ISA de equipamento (ex: Z3M03M1), cabo (ex: Z3M03M1C3), painel (ex: Z3RM01) ou número de página (ex: 21).
+                Tente buscar por KKS (ex: 416BM01MT10WHO2), ISA (ex: Z3M03M1), Cabos (ex: Z3M03M1F4), Bornes (ex: RM1-SL8:A2) ou Páginas.
               </p>
             </div>
           ) : (
-            searchResults.map((item, idx) => {
+            displayedResults.map((item, idx) => {
               const isSelected = idx === selectedIndex;
               return (
                 <div
@@ -232,13 +254,16 @@ export const SearchSpotlightModal: React.FC<SearchSpotlightModalProps> = ({
                     </div>
 
                     <div>
-                      {/* Tag Code + Exact Match Badge */}
-                      <div className="flex items-center gap-2">
+                      {/* Tag Code + Format Badge + Exact Match Badge */}
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono text-base font-bold text-white tracking-wide">
                           {item.tag.code}
                         </span>
+                        <span className="text-[10px] font-bold font-mono text-cyan-300 bg-cyan-950 border border-cyan-700/60 px-2 py-0.5 rounded shadow-sm">
+                          {item.formatLabel}
+                        </span>
                         {item.isExactMatch && (
-                          <span className="text-[10px] font-semibold tracking-wider text-cyan-300 bg-cyan-950/80 border border-cyan-700/60 px-1.5 py-0.2 rounded uppercase">
+                          <span className="text-[10px] font-semibold tracking-wider text-emerald-300 bg-emerald-950/80 border border-emerald-700/60 px-1.5 py-0.2 rounded uppercase">
                             Correspondência Exata
                           </span>
                         )}

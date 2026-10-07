@@ -9,6 +9,8 @@ interface TopNavbarProps {
   isMobileMode: boolean;
   onToggleMobileMode: () => void;
   activeRevision: string;
+  revisions?: { revision: string; description: string }[];
+  onSelectActiveRevision?: (revStr: string) => void;
   documentNumber: string;
 }
 
@@ -20,6 +22,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   isMobileMode,
   onToggleMobileMode,
   activeRevision,
+  revisions = [],
+  onSelectActiveRevision,
   documentNumber
 }) => {
   return (
@@ -37,11 +41,31 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           <span className="font-semibold text-lg tracking-tight">DiagramHub</span>
         </a>
 
-        {/* Quiet document context (single-line unboxed text) */}
+        {/* Quiet document context & interactive Revision Selector */}
         <div className="hidden lg:flex items-center gap-2 text-xs text-slate-400 border-l border-slate-700/60 pl-3">
           <span className="font-mono text-cyan-300 font-medium">{documentNumber}</span>
           <span aria-hidden="true" className="text-slate-600">·</span>
-          <span>Rev {activeRevision}</span>
+          
+          {/* Seletor rápido e interativo de Revisões */}
+          <div className="relative flex items-center">
+            <select
+              value={activeRevision}
+              onChange={(e) => onSelectActiveRevision && onSelectActiveRevision(e.target.value)}
+              className="bg-slate-800 text-cyan-300 border border-slate-700 hover:border-cyan-500 rounded px-2 py-0.5 text-xs font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-colors"
+              title="Clique para alternar a Revisão Ativa do Projeto"
+            >
+              {revisions.length > 0 ? (
+                revisions.map((rev) => (
+                  <option key={rev.revision} value={rev.revision} className="bg-slate-900 text-slate-200">
+                    Rev {rev.revision} {rev.revision === activeRevision ? '(Ativa)' : ''}
+                  </option>
+                ))
+              ) : (
+                <option value={activeRevision}>Rev {activeRevision}</option>
+              )}
+            </select>
+          </div>
+
           <span aria-hidden="true" className="text-slate-600">·</span>
           <span className="text-slate-400">Votorantim Nobres MT</span>
         </div>

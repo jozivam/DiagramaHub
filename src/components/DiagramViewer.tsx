@@ -13,6 +13,7 @@ interface DiagramViewerProps {
   page: DiagramPage;
   totalPages: number;
   allPages: DiagramPage[];
+  pdfUrl?: string;
   highlightedTagCode?: string;
   selectedTag?: TagItem | null;
   onSelectTag: (tag: TagItem) => void;
@@ -27,6 +28,7 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
   page,
   totalPages,
   allPages,
+  pdfUrl = '/NB.I.Z3001.505-03.pdf',
   highlightedTagCode,
   selectedTag,
   onSelectTag,
@@ -137,68 +139,14 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
 
   return (
     <div className="relative flex-1 flex flex-col h-full bg-slate-950 select-none overflow-hidden">
-      {/* 1. Barra de Filtro e Localização Direta no Diagrama */}
+      {/* 1. Barra de Controles e Navegação Limpa do Diagrama */}
       <div className="px-4 py-2 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300 z-20 shrink-0">
-        <div className="flex items-center gap-3 flex-1 min-w-[280px] max-w-xl relative">
-          <div className="relative w-full">
-            <Search className="w-4 h-4 text-cyan-400 absolute left-3 top-2 pointer-events-none" />
-            <input
-              ref={filterInputRef}
-              type="text"
-              value={diagramFilterQuery}
-              onFocus={() => setIsFilterOpen(true)}
-              onChange={(e) => {
-                setDiagramFilterQuery(e.target.value);
-                setIsFilterOpen(true);
-              }}
-              placeholder="Filtrar ou apontar tag no diagrama (ex: Z3M03M1, A1J02M1, RM1-SL8:A2, Z3P62Q1)..."
-              className="w-full bg-slate-950 border border-cyan-800/80 rounded-lg pl-9 pr-8 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono shadow-inner"
-            />
-            {diagramFilterQuery && (
-              <button
-                onClick={() => {
-                  setDiagramFilterQuery('');
-                  setIsFilterOpen(false);
-                }}
-                className="absolute right-2 top-2 text-slate-500 hover:text-white"
-              >
-                ×
-              </button>
-            )}
-
-            {/* Dropdown de Resultados do Filtro com Ação de "Correr para Página" */}
-            {isFilterOpen && filterResults.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden z-50 max-h-72 overflow-y-auto divide-y divide-slate-800">
-                <div className="px-3 py-1.5 bg-slate-950 text-[11px] font-semibold text-cyan-400 uppercase tracking-wider flex items-center justify-between">
-                  <span>Tags encontradas - Clique para correr e apontar:</span>
-                  <span className="text-slate-500 font-normal">ESC para fechar</span>
-                </div>
-                {filterResults.map((res) => (
-                  <div
-                    key={`${res.page.pageNumber}-${res.tag.id}`}
-                    onClick={() => {
-                      onNavigateToPageAndTag(res.page.pageNumber, res.tag.code);
-                      setDiagramFilterQuery('');
-                      setIsFilterOpen(false);
-                    }}
-                    className="p-2.5 hover:bg-cyan-950/50 cursor-pointer flex items-center justify-between transition-colors text-xs"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-cyan-300">{res.tag.code}</span>
-                        <span className="text-[10px] text-slate-400">({res.tag.type})</span>
-                      </div>
-                      <div className="text-[11px] text-slate-300">{res.tag.description}</div>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-cyan-400 font-mono">
-                      <span>Pág {res.page.pageNumber}</span>
-                      <CornerDownLeft className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-slate-200">FOLHA</span>
+          <span className="font-mono font-bold text-cyan-400 bg-slate-950 border border-slate-700 px-2 py-0.5 rounded">
+            {page.sheetCode} ({page.pageNumber} / {totalPages})
+          </span>
+          <span className="text-slate-500 font-mono hidden sm:inline">| {page.title}</span>
         </div>
 
         {/* Controles de Navegação de Folha */}
@@ -381,9 +329,9 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
       {viewerMode === 'pdf-native' ? (
         <div className="flex-1 relative w-full h-full bg-slate-950">
           <iframe
-            src={`/NB.I.Z3001.505-02.pdf#page=${page.pageNumber}`}
+            src={`${pdfUrl}#page=${page.pageNumber}`}
             className="w-full h-full border-0"
-            title={`Diagrama Real NB.I.Z3001.505-02 - Folha ${page.pageNumber}`}
+            title={`Diagrama Real ${pdfUrl} - Folha ${page.pageNumber}`}
           />
         </div>
       ) : (
@@ -405,10 +353,10 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
               backgroundColor: bgColor
             }}
           >
-            {/* RENDERIZADOR DO PDF REAL FORNECIDO NO PROJETO (NB.I.Z3001.505-02.pdf) */}
+            {/* RENDERIZADOR DO PDF REAL DA REVISÃO ATIVA */}
             <div className="w-full h-full flex items-center justify-center pointer-events-none p-1">
               <RealPdfViewer
-                pdfUrl="/NB.I.Z3001.505-02.pdf"
+                pdfUrl={pdfUrl}
                 pageNumber={page.pageNumber}
                 viewTheme={viewTheme}
                 scale={2.0}
@@ -585,8 +533,14 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
             {/* 4. ELEMENTO APONTADOR DISCRETO QUANDO UMA TAG FOR BUSCADA (Sem quadrado pontilhado nem badge) */}
             {showTagPins &&
               page.tags.map((tag) => {
+                const cleanHighlighted = (highlightedTagCode || '').trim().toUpperCase();
+                const cleanCode = tag.code.trim().toUpperCase();
                 const isTargetTag =
-                  highlightedTagCode && tag.code.toUpperCase() === highlightedTagCode.toUpperCase();
+                  cleanHighlighted.length > 0 &&
+                  (cleanCode === cleanHighlighted ||
+                    cleanCode.includes(cleanHighlighted) ||
+                    cleanHighlighted.includes(cleanCode) ||
+                    tag.description.toUpperCase().includes(cleanHighlighted));
 
                 if (!isTargetTag) return null;
 
@@ -603,10 +557,6 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
                       <circle cx="0" cy="0" r="24" fill="none" stroke="#22d3ee" strokeWidth="2" strokeDasharray="3 3" />
                       <circle cx="0" cy="0" r="14" fill="rgba(6,182,212,0.3)" stroke="#06b6d4" strokeWidth="2" />
                       <circle cx="0" cy="0" r="3" fill="#ffffff" />
-                      <line x1="-36" y1="0" x2="-16" y2="0" stroke="#22d3ee" strokeWidth="2" />
-                      <line x1="16" y1="0" x2="36" y2="0" stroke="#22d3ee" strokeWidth="2" />
-                      <line x1="0" y1="-36" x2="0" y2="-16" stroke="#22d3ee" strokeWidth="2" />
-                      <line x1="0" y1="16" x2="0" y2="36" stroke="#22d3ee" strokeWidth="2" />
                     </g>
                   </g>
                 );

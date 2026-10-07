@@ -32,19 +32,28 @@ export const RealPdfViewer: React.FC<RealPdfViewerProps> = ({
     setLoading(true);
     setError(null);
 
-    const loadingTask = pdfjsLib.getDocument(pdfUrl);
-    loadingTask.promise
-      .then((doc) => {
-        if (!isMounted) return;
-        setPdfDoc(doc);
-        if (onLoadSuccess) onLoadSuccess(doc.numPages);
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        console.error('Erro ao carregar o PDF real:', err);
-        setError('Não foi possível carregar o arquivo PDF do projeto.');
-        setLoading(false);
-      });
+    const loadPdfWithFallback = (url: string, isRetry: boolean = false) => {
+      const loadingTask = pdfjsLib.getDocument(url);
+      loadingTask.promise
+        .then((doc) => {
+          if (!isMounted) return;
+          setPdfDoc(doc);
+          if (onLoadSuccess) onLoadSuccess(doc.numPages);
+        })
+        .catch((err) => {
+          if (!isMounted) return;
+          if (!isRetry && url !== '/NB.I.Z3001.505-02.pdf') {
+            console.warn(`Tentando arquivo PDF de contingência /NB.I.Z3001.505-02.pdf após falha em ${url}`);
+            loadPdfWithFallback('/NB.I.Z3001.505-02.pdf', true);
+          } else {
+            console.error('Erro ao carregar o PDF real:', err);
+            setError('Não foi possível carregar o arquivo PDF do projeto.');
+            setLoading(false);
+          }
+        });
+    };
+
+    loadPdfWithFallback(pdfUrl);
 
     return () => {
       isMounted = false;

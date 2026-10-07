@@ -27,6 +27,7 @@ export interface TagItem {
   id: string;
   code: string;
   type: TagType;
+  tagFormat?: 'ISA' | 'KKS' | 'CABLE' | 'BORNE' | 'PANEL' | 'OTHER';
   description: string;
   spec?: string;       // ex: "3700CV / 6.6kV", "1x4C#150mm²", "Pt-100 3 fios"
   pageNumber: number;
@@ -68,6 +69,7 @@ export interface DocumentRevision {
   isActive: boolean;
   totalPages: number;
   changesSummary: string[];
+  pdfUrl?: string;
 }
 
 export interface IndustrialDocument {
