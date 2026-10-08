@@ -277,6 +277,7 @@ export default function App() {
           <MobileFieldView
             currentPage={currentPage}
             allPages={document.pages}
+            pdfUrl={document.revisions.find((r) => r.revision === document.activeRevision)?.pdfUrl || '/NB.I.Z3001.505-03.pdf'}
             onSelectPage={handleSelectPage}
             onSelectTag={handleSelectTag}
             selectedTag={selectedTag}
@@ -303,7 +304,7 @@ export default function App() {
                   page={currentPage}
                   totalPages={document.pages.length}
                   allPages={document.pages}
-                  pdfUrl={document.revisions.find((r) => r.revision === document.activeRevision)?.pdfUrl || (document.activeRevision === '03' ? '/NB.I.Z3001.505-03.pdf' : '/NB.I.Z3001.505-02.pdf')}
+                  pdfUrl={document.revisions.find((r) => r.revision === document.activeRevision)?.pdfUrl || '/NB.I.Z3001.505-03.pdf'}
                   highlightedTagCode={highlightedTagCode}
                   selectedTag={selectedTag}
                   onSelectTag={handleSelectTag}

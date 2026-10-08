@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Define o worker para pdfjs-dist via CDN unpkg
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+// Define o worker localmente empacotado pelo Vite (elimina dependência de CDN/CORS no mobile/Vercel)
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 interface RealPdfViewerProps {
   pdfUrl: string;
@@ -33,7 +34,11 @@ export const RealPdfViewer: React.FC<RealPdfViewerProps> = ({
     setError(null);
 
     const loadPdfWithFallback = (url: string, isRetry: boolean = false) => {
-      const loadingTask = pdfjsLib.getDocument(url);
+      const loadingTask = pdfjsLib.getDocument({
+        url,
+        cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/cmaps/`,
+        cMapPacked: true,
+      });
       loadingTask.promise
         .then((doc) => {
           if (!isMounted) return;
@@ -42,9 +47,9 @@ export const RealPdfViewer: React.FC<RealPdfViewerProps> = ({
         })
         .catch((err) => {
           if (!isMounted) return;
-          if (!isRetry && url !== '/NB.I.Z3001.505-02.pdf') {
-            console.warn(`Tentando arquivo PDF de contingência /NB.I.Z3001.505-02.pdf após falha em ${url}`);
-            loadPdfWithFallback('/NB.I.Z3001.505-02.pdf', true);
+          if (!isRetry && url !== '/NB.I.Z3001.505-03.pdf') {
+            console.warn(`Tentando arquivo PDF oficial /NB.I.Z3001.505-03.pdf após falha em ${url}`);
+            loadPdfWithFallback('/NB.I.Z3001.505-03.pdf', true);
           } else {
             console.error('Erro ao carregar o PDF real:', err);
             setError('Não foi possível carregar o arquivo PDF do projeto.');

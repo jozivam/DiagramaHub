@@ -10,6 +10,7 @@ import { RealPdfViewer } from './RealPdfViewer';
 interface MobileFieldViewProps {
   currentPage: DiagramPage;
   allPages: DiagramPage[];
+  pdfUrl?: string;
   onSelectPage: (pageNumber: number) => void;
   onSelectTag: (tag: TagItem) => void;
   selectedTag: TagItem | null;
@@ -21,6 +22,7 @@ interface MobileFieldViewProps {
 export const MobileFieldView: React.FC<MobileFieldViewProps> = ({
   currentPage,
   allPages,
+  pdfUrl,
   onSelectPage,
   onSelectTag,
   selectedTag,
@@ -117,7 +119,7 @@ export const MobileFieldView: React.FC<MobileFieldViewProps> = ({
           {/* Real PDF Diagram Viewer for Mobile */}
           <div className="w-full h-full flex items-center justify-center pointer-events-none p-1 overflow-hidden">
             <RealPdfViewer
-              pdfUrl="/NB.I.Z3001.505-02.pdf"
+              pdfUrl={pdfUrl || '/NB.I.Z3001.505-03.pdf'}
               pageNumber={currentPage.pageNumber}
               viewTheme="light-classic"
               scale={1.5}
