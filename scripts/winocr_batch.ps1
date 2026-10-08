@@ -17,19 +17,30 @@ function Await($op, [Type]$t) {
 $engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()
 
 foreach ($img in Get-ChildItem -Path $Dir -Filter *.png) {
-  $file = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($img.FullName)) ([Windows.Storage.StorageFile])
-  $stream = Await ($file.OpenAsync([Windows.Storage.FileAccessMode]::Read)) ([Windows.Storage.Streams.IRandomAccessStream])
-  $decoder = Await ([Windows.Graphics.Imaging.BitmapDecoder]::CreateAsync($stream)) ([Windows.Graphics.Imaging.BitmapDecoder])
-  $bitmap = Await ($decoder.GetSoftwareBitmapAsync()) ([Windows.Graphics.Imaging.SoftwareBitmap])
-  $result = Await ($engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])
-  $lines = foreach ($line in $result.Lines) {
-    [pscustomobject]@{
-      l = $line.Text
-      words = @(foreach ($w in $line.Words) { [pscustomobject]@{ t = $w.Text; x = [int]$w.BoundingRect.X; y = [int]$w.BoundingRect.Y; w = [int]$w.BoundingRect.Width; h = [int]$w.BoundingRect.Height } })
+  $success = $false
+  for ($retry = 0; $retry -lt 3 -and -not $success; $retry++) {
+    try {
+      if ($retry -gt 0) { Start-Sleep -Milliseconds 100 }
+      $file = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($img.FullName)) ([Windows.Storage.StorageFile])
+      $stream = Await ($file.OpenAsync([Windows.Storage.FileAccessMode]::Read)) ([Windows.Storage.Streams.IRandomAccessStream])
+      $decoder = Await ([Windows.Graphics.Imaging.BitmapDecoder]::CreateAsync($stream)) ([Windows.Graphics.Imaging.BitmapDecoder])
+      $bitmap = Await ($decoder.GetSoftwareBitmapAsync()) ([Windows.Graphics.Imaging.SoftwareBitmap])
+      $result = Await ($engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])
+      $lines = foreach ($line in $result.Lines) {
+        [pscustomobject]@{
+          l = $line.Text
+          words = @(foreach ($w in $line.Words) { [pscustomobject]@{ t = $w.Text; x = [int]$w.BoundingRect.X; y = [int]$w.BoundingRect.Y; w = [int]$w.BoundingRect.Width; h = [int]$w.BoundingRect.Height } })
+        }
+      }
+      $json = (@($lines) | ConvertTo-Json -Depth 5 -Compress)
+      if (-not $json) { $json = '[]' }
+      [System.IO.File]::WriteAllText(($img.FullName -replace '\.png$', '.json'), $json, [System.Text.UTF8Encoding]::new($false))
+      $bitmap.Dispose(); $stream.Dispose()
+      $success = $true
+    } catch {
+      if ($retry -ge 2) {
+        [System.IO.File]::WriteAllText(($img.FullName -replace '\.png$', '.json'), '[]', [System.Text.UTF8Encoding]::new($false))
+      }
     }
   }
-  $json = (@($lines) | ConvertTo-Json -Depth 5 -Compress)
-  if (-not $json) { $json = '[]' }
-  [System.IO.File]::WriteAllText(($img.FullName -replace '\.png$', '.json'), $json, [System.Text.UTF8Encoding]::new($false))
-  $bitmap.Dispose(); $stream.Dispose()
 }
