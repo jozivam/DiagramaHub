@@ -30,6 +30,8 @@ import { RemotaSearchTab } from './components/RemotaSearchTab';
 import { FieldChecklistModal } from './components/FieldChecklistModal';
 import { MobileFieldView } from './components/MobileFieldView';
 
+import { dbService } from './services/dbService';
+
 export default function App() {
   // Inicialização do documento com todas as páginas geradas
   const [document, setDocument] = useState<IndustrialDocument>(() => {
@@ -39,6 +41,15 @@ export default function App() {
       pages
     };
   });
+
+  // Inicializa a conexão com o IndexedDB e sincroniza os dados do cliente
+  useEffect(() => {
+    dbService.initDB().then(() => {
+      console.log('IndexedDB DiagramaHubDB pronto para operação rápida no navegador.');
+    }).catch((err) => {
+      console.error('Falha ao inicializar IndexedDB:', err);
+    });
+  }, []);
 
   // Estado de navegação e visualização
   const [currentPageNumber, setCurrentPageNumber] = useState<number>(19); // Começa na folha chave do motor Z3M03M1
@@ -222,13 +233,19 @@ export default function App() {
     });
   };
 
-  // Gerenciamento do checklist de campo
+  // Gerenciamento do checklist de campo integrado com o IndexedDB
   const handleToggleChecklist = (id: string) => {
-    setChecklistItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, completed: !item.completed } : item
-      )
-    );
+    setChecklistItems((prev) => {
+      const updated = prev.map((item) => {
+        if (item.id === id) {
+          const newItem = { ...item, completed: !item.completed };
+          dbService.saveChecklistItem(newItem).catch(console.error);
+          return newItem;
+        }
+        return item;
+      });
+      return updated;
+    });
   };
 
   const handleAddChecklistItem = (item: Omit<FieldChecklistItem, 'id' | 'completed'>) => {
@@ -238,6 +255,7 @@ export default function App() {
       completed: false
     };
     setChecklistItems((prev) => [newItem, ...prev]);
+    dbService.saveChecklistItem(newItem).catch(console.error);
   };
 
   const handleDeleteChecklistItem = (id: string) => {

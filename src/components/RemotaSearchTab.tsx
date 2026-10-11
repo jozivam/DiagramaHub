@@ -3,7 +3,8 @@ import {
   Search, Cpu, ExternalLink, Filter, Radio, Layers, Zap, 
   Thermometer, Gauge, Signal, AlertTriangle, ChevronDown
 } from 'lucide-react';
-import { OFFICIAL_INDEX_ROWS, IndexRow } from '../data/nobresProjectData';
+import { OFFICIAL_INDEX_ROWS, IndexRow, generateNobresPages, initialCableSchedule } from '../data/nobresProjectData';
+import { DiagramPage } from '../types/diagram';
 
 // ──────────────────────────────────────────────────────────────
 //  Metadados de cada Remota (nome descritivo + área)
@@ -62,48 +63,141 @@ function buildRemotaSearchAliases(remotaId: string): string {
 // ──────────────────────────────────────────────────────────────
 function buildRemotaTagList(): RemotaTagEntry[] {
   const entries: RemotaTagEntry[] = [];
+  const generatedPages = generateNobresPages();
+  const pageMap = new Map<number, DiagramPage>();
+  generatedPages.forEach((p) => pageMap.get(p.pageNumber) || pageMap.set(p.pageNumber, p));
 
+  const tagKeySet = new Set<string>();
+
+  // 1. Processar todas as folhas vinculadas a Remotas no índice oficial
   for (const row of OFFICIAL_INDEX_ROWS) {
-    // Só nos interessa linhas vinculadas a uma Remota
     if (!row.panel || !row.panel.startsWith('Z3RM')) continue;
-    if (!row.primaryTag) continue;
 
     const remotaId = row.panel;
     const meta = REMOTA_METADATA[remotaId];
     const remotaName = meta ? meta.name : remotaId;
     const area = meta ? meta.area : row.description;
 
-    // Texto concatenado para busca — inclui aliases
-    const searchText = [
-      row.primaryTag,
-      row.description,
-      remotaId,
-      remotaName,
-      row.sheetCode,
-      area,
-      buildRemotaSearchAliases(remotaId),
-      `FL ${row.pageNumber}`,
-      `FOLHA ${row.pageNumber}`,
-      `PG ${row.pageNumber}`,
-    ].join(' ').toLowerCase();
+    const diagramPage = pageMap.get(row.pageNumber);
+    const tagsForPage = diagramPage ? diagramPage.tags : [];
 
-    entries.push({
-      remotaId,
-      remotaName,
-      tagCode: row.primaryTag,
-      description: row.description,
-      category: row.category,
-      pageNumber: row.pageNumber,
-      sheetCode: row.sheetCode,
-      area,
-      searchText,
-    });
+    if (tagsForPage.length > 0) {
+      for (const t of tagsForPage) {
+        if (t.code.startsWith('Z3-FOLHA-')) continue;
+
+        const uniqueKey = `${remotaId}___${t.code}`;
+        if (tagKeySet.has(uniqueKey)) continue;
+        tagKeySet.add(uniqueKey);
+
+        const searchText = [
+          t.code,
+          t.description || row.description,
+          remotaId,
+          remotaName,
+          row.sheetCode,
+          area,
+          buildRemotaSearchAliases(remotaId),
+          `FL ${row.pageNumber}`,
+          `FOLHA ${row.pageNumber}`,
+          `PG ${row.pageNumber}`,
+        ].join(' ').toLowerCase();
+
+        entries.push({
+          remotaId,
+          remotaName,
+          tagCode: t.code,
+          description: t.description || row.description,
+          category: row.category,
+          pageNumber: row.pageNumber,
+          sheetCode: row.sheetCode,
+          area,
+          searchText,
+        });
+      }
+    } else if (row.primaryTag) {
+      const uniqueKey = `${remotaId}___${row.primaryTag}`;
+      if (!tagKeySet.has(uniqueKey)) {
+        tagKeySet.add(uniqueKey);
+
+        const searchText = [
+          row.primaryTag,
+          row.description,
+          remotaId,
+          remotaName,
+          row.sheetCode,
+          area,
+          buildRemotaSearchAliases(remotaId),
+          `FL ${row.pageNumber}`,
+          `FOLHA ${row.pageNumber}`,
+          `PG ${row.pageNumber}`,
+        ].join(' ').toLowerCase();
+
+        entries.push({
+          remotaId,
+          remotaName,
+          tagCode: row.primaryTag,
+          description: row.description,
+          category: row.category,
+          pageNumber: row.pageNumber,
+          sheetCode: row.sheetCode,
+          area,
+          searchText,
+        });
+      }
+    }
   }
 
-  // Ordenar por Remota e depois por página
+  // 2. Mapeamento adicional via Tabela de Cabos (De-Para / Cable Schedule)
+  // Associa cabos de interligação diretamente às Remotas de origem/destino
+  for (const cab of initialCableSchedule) {
+    const originMatch = cab.originTag.match(/(Z3RM\d+)/i);
+    const destMatch = cab.destinationTag.match(/(Z3RM\d+)/i);
+
+    const targetRemotas = new Set<string>();
+    if (originMatch) targetRemotas.add(originMatch[1].toUpperCase());
+    if (destMatch) targetRemotas.add(destMatch[1].toUpperCase());
+
+    for (const remotaId of targetRemotas) {
+      const meta = REMOTA_METADATA[remotaId];
+      if (!meta) continue;
+
+      const uniqueKey = `${remotaId}___${cab.cableTag}`;
+      if (tagKeySet.has(uniqueKey)) continue;
+      tagKeySet.add(uniqueKey);
+
+      const searchText = [
+        cab.cableTag,
+        cab.functionDescription,
+        cab.cableSpec,
+        cab.originTag,
+        cab.destinationTag,
+        remotaId,
+        meta.name,
+        meta.area,
+        buildRemotaSearchAliases(remotaId),
+        `FL ${cab.pageReference}`,
+        `FOLHA ${cab.pageReference}`,
+      ].join(' ').toLowerCase();
+
+      entries.push({
+        remotaId,
+        remotaName: meta.name,
+        tagCode: cab.cableTag,
+        description: `[Cabo] ${cab.functionDescription} (${cab.cableSpec}) - De: ${cab.originTag} Para: ${cab.destinationTag}`,
+        category: 'CONTROL',
+        pageNumber: cab.pageReference,
+        sheetCode: String(cab.pageReference).padStart(2, '0'),
+        area: meta.area,
+        searchText,
+      });
+    }
+  }
+
+  // Ordenar por Remota e depois por página e código de tag
   entries.sort((a, b) => {
     if (a.remotaId !== b.remotaId) return a.remotaId.localeCompare(b.remotaId);
-    return a.pageNumber - b.pageNumber;
+    if (a.pageNumber !== b.pageNumber) return a.pageNumber - b.pageNumber;
+    return a.tagCode.localeCompare(b.tagCode);
   });
 
   return entries;
